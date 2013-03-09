@@ -62,6 +62,7 @@
 @property (strong, nonatomic) NSMutableData         *data;
 
 @property (nonatomic, strong) IBOutlet UILabel      *signalLabel;
+@property (strong, nonatomic) NSArray               *rawRSSIFIFO;
 
 @end
 
@@ -147,7 +148,24 @@
  */
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
 {
-    self.signalLabel.text = [NSString stringWithFormat:@"%@", RSSI];
+
+    NSMutableArray *newRSSIFIFO = [NSMutableArray arrayWithObject:RSSI];
+    [newRSSIFIFO addObjectsFromArray:self.rawRSSIFIFO];
+    if (newRSSIFIFO.count > 20)
+        [newRSSIFIFO removeLastObject];
+    
+    self.rawRSSIFIFO = newRSSIFIFO;
+    NSInteger totalRSSI = 0;
+    for (NSNumber *rssi in self.rawRSSIFIFO) {
+        totalRSSI += rssi.integerValue;
+    }
+    
+    NSInteger averageRSSI = 0;
+    if (self.rawRSSIFIFO.count > 1)
+        averageRSSI = self.rawRSSIFIFO.count;
+
+    
+    self.signalLabel.text = [NSString stringWithFormat:@"%0d", averageRSSI];
 
     // Reject any where the value is above reasonable range
     if (RSSI.integerValue > -15) {
