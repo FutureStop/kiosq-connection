@@ -148,10 +148,12 @@
  */
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
 {
+    
+    const NSInteger kFIFOLength = 20;
 
     NSMutableArray *newRSSIFIFO = [NSMutableArray arrayWithObject:RSSI];
     [newRSSIFIFO addObjectsFromArray:self.rawRSSIFIFO];
-    if (newRSSIFIFO.count > 20)
+    if (newRSSIFIFO.count > kFIFOLength)
         [newRSSIFIFO removeLastObject];
     
     self.rawRSSIFIFO = newRSSIFIFO;
