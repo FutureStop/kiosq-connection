@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		4610FA5D4AD44427B8FCF5F6 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A38BEC6B0474D809A7DC9DE /* libPods.a */; };
+		552954DA16EBFE0C009F37BC /* BTLECentralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 552954D716EBFE0C009F37BC /* BTLECentralViewController.m */; };
+		552954DB16EBFE0C009F37BC /* BTLEPeripheralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 552954D916EBFE0C009F37BC /* BTLEPeripheralViewController.m */; };
+		552954E016EBFE3B009F37BC /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 552954DC16EBFE3B009F37BC /* MainStoryboard_iPhone.storyboard */; };
+		552954E116EBFE3B009F37BC /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 552954DD16EBFE3B009F37BC /* MainStoryboard_iPad.storyboard */; };
+		552954E216EBFE3B009F37BC /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 552954DF16EBFE3B009F37BC /* ViewController.m */; };
 		885DF4FE16EB14E600A25348 /* 57.png in Resources */ = {isa = PBXBuildFile; fileRef = 885DF4FD16EB14E600A25348 /* 57.png */; };
 		885DF50016EB14F100A25348 /* 114.png in Resources */ = {isa = PBXBuildFile; fileRef = 885DF4FF16EB14F100A25348 /* 114.png */; };
 		885DF50216EB151700A25348 /* 144.png in Resources */ = {isa = PBXBuildFile; fileRef = 885DF50116EB151700A25348 /* 144.png */; };
@@ -58,6 +63,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		552954D616EBFE0B009F37BC /* BTLECentralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTLECentralViewController.h; sourceTree = "<group>"; };
+		552954D716EBFE0C009F37BC /* BTLECentralViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTLECentralViewController.m; sourceTree = "<group>"; };
+		552954D816EBFE0C009F37BC /* BTLEPeripheralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTLEPeripheralViewController.h; sourceTree = "<group>"; };
+		552954D916EBFE0C009F37BC /* BTLEPeripheralViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTLEPeripheralViewController.m; sourceTree = "<group>"; };
+		552954DC16EBFE3B009F37BC /* MainStoryboard_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		552954DD16EBFE3B009F37BC /* MainStoryboard_iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		552954DE16EBFE3B009F37BC /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		552954DF16EBFE3B009F37BC /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		552954E316EBFE55009F37BC /* TransferService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransferService.h; sourceTree = "<group>"; };
 		6A38BEC6B0474D809A7DC9DE /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		885DF4FD16EB14E600A25348 /* 57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 57.png; sourceTree = "<group>"; };
 		885DF4FF16EB14F100A25348 /* 114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 114.png; sourceTree = "<group>"; };
@@ -145,13 +159,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C64C6F6516EAE6A900CAD6C7 = {
+		5529547A16EBE2C3009F37BC /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 				885DF50316EB151F00A25348 /* 72.png */,
 				885DF50116EB151700A25348 /* 144.png */,
 				885DF4FF16EB14F100A25348 /* 114.png */,
 				885DF4FD16EB14E600A25348 /* 57.png */,
+			);
+			name = Resources;
+			path = ..;
+			sourceTree = "<group>";
+		};
+		C64C6F6516EAE6A900CAD6C7 = {
+			isa = PBXGroup;
+			children = (
 				C64C6F7716EAE6A900CAD6C7 /* FutureStop */,
 				C64C6F9E16EAE6A900CAD6C7 /* FutureStopTests */,
 				C64C6F7016EAE6A900CAD6C7 /* Frameworks */,
@@ -205,7 +227,17 @@
 				C64C6F8A16EAE6A900CAD6C7 /* FSViewController.m */,
 				C64C6F8C16EAE6A900CAD6C7 /* FSViewController_iPhone.xib */,
 				C64C6F8F16EAE6A900CAD6C7 /* FSViewController_iPad.xib */,
+				552954DC16EBFE3B009F37BC /* MainStoryboard_iPhone.storyboard */,
+				552954DD16EBFE3B009F37BC /* MainStoryboard_iPad.storyboard */,
+				552954E316EBFE55009F37BC /* TransferService.h */,
+				552954DE16EBFE3B009F37BC /* ViewController.h */,
+				552954DF16EBFE3B009F37BC /* ViewController.m */,
+				552954D616EBFE0B009F37BC /* BTLECentralViewController.h */,
+				552954D716EBFE0C009F37BC /* BTLECentralViewController.m */,
+				552954D816EBFE0C009F37BC /* BTLEPeripheralViewController.h */,
+				552954D916EBFE0C009F37BC /* BTLEPeripheralViewController.m */,
 				885DF57616EB190200A25348 /* FutureStop.xcdatamodeld */,
+				5529547A16EBE2C3009F37BC /* Resources */,
 				C64C6F7816EAE6A900CAD6C7 /* Supporting Files */,
 			);
 			path = FutureStop;
@@ -327,6 +359,8 @@
 				885DF50016EB14F100A25348 /* 114.png in Resources */,
 				885DF50216EB151700A25348 /* 144.png in Resources */,
 				885DF50416EB151F00A25348 /* 72.png in Resources */,
+				552954E016EBFE3B009F37BC /* MainStoryboard_iPhone.storyboard in Resources */,
+				552954E116EBFE3B009F37BC /* MainStoryboard_iPad.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,6 +413,9 @@
 				C64C6F8216EAE6A900CAD6C7 /* FSAppDelegate.m in Sources */,
 				C64C6F8B16EAE6A900CAD6C7 /* FSViewController.m in Sources */,
 				885DF57816EB190200A25348 /* FutureStop.xcdatamodeld in Sources */,
+				552954DA16EBFE0C009F37BC /* BTLECentralViewController.m in Sources */,
+				552954DB16EBFE0C009F37BC /* BTLEPeripheralViewController.m in Sources */,
+				552954E216EBFE3B009F37BC /* ViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
