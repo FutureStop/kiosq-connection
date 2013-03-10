@@ -549,12 +549,14 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BC46B7DB35214847A06FF326 /* Pods.xcconfig */;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer: Conrad Stoll (JLF8KM6VUP)";
+				CODE_SIGN_IDENTITY = "iPhone Distribution: Mutual Mobile";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Mutual Mobile";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "FutureStop/FutureStop-Prefix.pch";
 				INFOPLIST_FILE = "FutureStop/FutureStop-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "53C7DB83-5453-4B92-B184-6ABF0BAF71D1";
+				PROVISIONING_PROFILE = "A160CDC5-3CCA-457F-82E4-22ECA9412E98";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "A160CDC5-3CCA-457F-82E4-22ECA9412E98";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

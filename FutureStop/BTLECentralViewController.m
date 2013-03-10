@@ -131,6 +131,8 @@
     [self.centralManager scanForPeripheralsWithServices:@[[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID]]
                                                 options:@{ CBCentralManagerScanOptionAllowDuplicatesKey : @YES }];
     
+    [self.centralManager retrieveConnectedPeripherals];
+    
     NSLog(@"Scanning started");
 }
 
@@ -140,6 +142,10 @@
     self.signalLabel.text = [NSString stringWithFormat:@"%@", peripheral.RSSI];
 }
 
+- (void)centralManager:(CBCentralManager *)central didRetrieveConnectedPeripherals:(NSArray *)peripherals {
+    NSLog(@"%@", peripherals);
+}
+
 
 /** This callback comes whenever a peripheral that is advertising the TRANSFER_SERVICE_UUID is discovered.
  *  We check the RSSI, to make sure it's close enough that we're interested in it, and if it is, 
@@ -147,6 +153,7 @@
  */
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
 {
+    [self.centralManager retrieveConnectedPeripherals];
     
     const NSInteger kFIFOLength = 20;
 
@@ -175,21 +182,27 @@
         
     // Reject if the signal strength is too low to be close enough (Close is around -22dB)
     if (RSSI.integerValue < -35) {
-        return;
+        //return;
     }
     
-    NSLog(@"Discovered %@ at %@", peripheral.name, RSSI);
-    
-    // Ok, it's in range - have we already seen it?
-    if (self.discoveredPeripheral != peripheral) {
+    if (RSSI.integerValue < -70) {
+        if (self.discoveredPeripheral == peripheral) {
+            //[self.centralManager cancelPeripheralConnection:peripheral];
+        }
+    } else {
+        NSLog(@"Discovered %@ at %@", peripheral.name, RSSI);
         
-        // Save a local copy of the peripheral, so CoreBluetooth doesn't get rid of it
-        self.discoveredPeripheral = peripheral;
-        self.discoveredPeripheral.delegate = self;
-        
-        // And connect
-        NSLog(@"Connecting to peripheral %@", peripheral);
-        [self.centralManager connectPeripheral:peripheral options:nil];
+        // Ok, it's in range - have we already seen it?
+        if (self.discoveredPeripheral != peripheral) {
+            
+            // Save a local copy of the peripheral, so CoreBluetooth doesn't get rid of it
+            self.discoveredPeripheral = peripheral;
+            self.discoveredPeripheral.delegate = self;
+            
+            // And connect
+            NSLog(@"Connecting to peripheral %@", peripheral);
+            [self.centralManager connectPeripheral:peripheral options:nil];
+        }
     }
 }
 
@@ -199,7 +212,7 @@
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
     NSLog(@"Failed to connect to %@. (%@)", peripheral, [error localizedDescription]);
-    [self cleanup];
+    //[self cleanup];
 }
 
 
@@ -212,7 +225,7 @@
     NSLog(@"Peripheral Connected");
     
     // Stop scanning
-    [self.centralManager stopScan];
+    //[self.centralManager stopScan];
     NSLog(@"Scanning stopped");
     
     // Clear the data that we may already have
@@ -253,7 +266,7 @@
     // Deal with errors (if any)
     if (error) {
         NSLog(@"Error discovering characteristics: %@", [error localizedDescription]);
-        [self cleanup];
+       // [self cleanup];
         return;
     }
     
@@ -271,6 +284,7 @@
     }
     
     // Once this is complete, we just need to wait for the data to come in.
+    [self.centralManager retrieveConnectedPeripherals];
 }
 
 
@@ -293,10 +307,10 @@
         [self setColorForString:string];
         
         // Cancel our subscription to the characteristic
-        [peripheral setNotifyValue:NO forCharacteristic:characteristic];
+        //[peripheral setNotifyValue:NO forCharacteristic:characteristic];
         
         // and disconnect from the peripehral
-        [self.centralManager cancelPeripheralConnection:peripheral];
+        //[self.centralManager cancelPeripheralConnection:peripheral];
     }
 
     // Otherwise, just add the data on to what we already have
@@ -345,7 +359,7 @@
     else {
         // so disconnect from the peripheral
         NSLog(@"Notification stopped on %@.  Disconnecting", characteristic);
-        [self.centralManager cancelPeripheralConnection:peripheral];
+        //[self.centralManager cancelPeripheralConnection:peripheral];
     }
 }
 

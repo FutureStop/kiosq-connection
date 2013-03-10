@@ -100,7 +100,6 @@
 #pragma mark - Peripheral Methods
 
 
-
 /** Required protocol method.  A full app should take care of all the possible states,
  *  but we're just waiting for  to know when the CBPeripheralManager is ready
  */
