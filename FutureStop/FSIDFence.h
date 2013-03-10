@@ -9,9 +9,16 @@
 #import <Foundation/Foundation.h>
 #import <CoreBluetooth/CoreBluetooth.h>
 
-
 @interface FSIDFence : NSObject
 
+/** 
+ Starts scanning for devices entering the fenced area for a specified service and characteristic UUID.
+ 
+ @param serviceUUID A service UUID for CoreBluetooth
+ @param characteristicUUID A characteristic UUID for CoreBluetooth
+ @param entryBlock A block to be called when a peripheral device enters the fence
+ @param leavingBlock A block to be called when a peripheral device leaves the fenced area
+ */
 - (void)startScanWithFenceServiceUUID:(NSString *)serviceUUID
                    characteristicUUID:(NSString *)characteristicUUID
                       fenceEntryBlock:(void (^)(CBPeripheral *enteringPeripheral))entryBlock

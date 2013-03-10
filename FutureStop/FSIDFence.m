@@ -68,21 +68,39 @@ typedef void (^FSIDFenceLeavingBlock)(CBPeripheral *leavingPeripheral);
     [self.centralManager retrieveConnectedPeripherals];
 }
 
+- (void)stopScanning {
+    [self releaseControlFromPeripheral:self.controlingPeripheral];
+    
+    [self.centralManager stopScan];
+}
+
 - (void)establishControlForPeripheral:(CBPeripheral *)peripheral {
     NSLog(@"%@ Controlling Screen", peripheral);
 
     self.controlingPeripheral = peripheral;
     self.controlingPeripheral.delegate = self;
     
-    [self.centralManager connectPeripheral:peripheral options:nil];
+    if (peripheral) {
+        [self.centralManager connectPeripheral:peripheral options:nil];
+    }
+    
+    if (self.entryBlock) {
+        self.entryBlock(peripheral);
+    }
 }
 
 - (void)releaseControlFromPeripheral:(CBPeripheral *)peripheral {
     NSLog(@"%@ Releasing Control", peripheral);
 
-    [self.centralManager cancelPeripheralConnection:peripheral];
+    if (peripheral) {
+        [self.centralManager cancelPeripheralConnection:peripheral];
+    }
     self.controlingPeripheral = nil;
     self.controlingUUID = nil;
+    
+    if (self.leavingBlock) {
+        self.leavingBlock(peripheral);
+    }
 }
 
 #pragma mark Range
@@ -112,6 +130,14 @@ typedef void (^FSIDFenceLeavingBlock)(CBPeripheral *leavingPeripheral);
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     [self releaseControlFromPeripheral:peripheral];
+    [self scan];
+}
+
+- (void)centralManagerDidUpdateState:(CBCentralManager *)central {
+    if (central.state != CBCentralManagerStatePoweredOn) {
+        return;
+    }
+
     [self scan];
 }
 
