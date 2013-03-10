@@ -56,7 +56,6 @@
 
 @interface BTLECentralViewController () <CBCentralManagerDelegate, CBPeripheralDelegate>
 
-@property (strong, nonatomic) IBOutlet UITextView   *textview;
 @property (strong, nonatomic) CBCentralManager      *centralManager;
 @property (strong, nonatomic) CBPeripheral          *discoveredPeripheral;
 @property (strong, nonatomic) NSMutableData         *data;
@@ -246,6 +245,8 @@
      
             // If it is, subscribe to it
             [peripheral setNotifyValue:YES forCharacteristic:characteristic];
+            
+            [peripheral readValueForCharacteristic:characteristic];
         }
     }
     
@@ -267,8 +268,9 @@
     // Have we got everything we need?
     if ([stringFromData isEqualToString:@"EOM"]) {
         
-        // We have, so show the data, 
-        [self.textview setText:[[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding]];
+        // We have, so show the data,
+        NSString *string = [[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding];
+        [self setColorForString:string];
         
         // Cancel our subscription to the characteristic
         [peripheral setNotifyValue:NO forCharacteristic:characteristic];
@@ -282,6 +284,22 @@
     
     // Log it
     NSLog(@"Received: %@", stringFromData);
+}
+
+- (void)setColorForString:(NSString *)string {
+    UIColor *color = [UIColor whiteColor];
+    
+    if ([string isEqualToString:@"Blue"]) {
+        color = [UIColor blueColor];
+    } else if ([string isEqualToString:@"Red"]) {
+        color = [UIColor redColor];
+    } else if ([string isEqualToString:@"Orange"]) {
+        color = [UIColor orangeColor];
+    } else if ([string isEqualToString:@"Green"]) {
+        color = [UIColor greenColor];
+    }
+    
+    self.view.backgroundColor = color;
 }
 
 

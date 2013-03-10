@@ -56,12 +56,12 @@
 
 
 @interface BTLEPeripheralViewController () <CBPeripheralManagerDelegate, UITextViewDelegate>
-@property (strong, nonatomic) IBOutlet UITextView       *textView;
-@property (strong, nonatomic) IBOutlet UISwitch         *advertisingSwitch;
-@property (strong, nonatomic) CBPeripheralManager       *peripheralManager;
-@property (strong, nonatomic) CBMutableCharacteristic   *transferCharacteristic;
-@property (strong, nonatomic) NSData                    *dataToSend;
-@property (nonatomic, readwrite) NSInteger              sendDataIndex;
+@property (strong, nonatomic) IBOutlet UISegmentedControl   *segmentedControl;
+@property (strong, nonatomic) IBOutlet UISwitch             *advertisingSwitch;
+@property (strong, nonatomic) CBPeripheralManager           *peripheralManager;
+@property (strong, nonatomic) CBMutableCharacteristic       *transferCharacteristic;
+@property (strong, nonatomic) NSData                        *dataToSend;
+@property (nonatomic, readwrite) NSInteger                  sendDataIndex;
 @end
 
 
@@ -141,7 +141,11 @@
     NSLog(@"Central subscribed to characteristic");
     
     // Get the data
-    self.dataToSend = [self.textView.text dataUsingEncoding:NSUTF8StringEncoding];
+    [self prepareToSendData];
+}
+
+- (void)prepareToSendData {
+    self.dataToSend = [[self.segmentedControl titleForSegmentAtIndex:self.segmentedControl.selectedSegmentIndex] dataUsingEncoding:NSUTF8StringEncoding];
     
     // Reset the index
     self.sendDataIndex = 0;
@@ -149,7 +153,6 @@
     // Start sending
     [self sendData];
 }
-
 
 /** Recognise when the central unsubscribes
  */
@@ -289,8 +292,11 @@
 /** Finishes the editing */
 - (void)dismissKeyboard
 {
-    [self.textView resignFirstResponder];
     self.navigationItem.rightBarButtonItem = nil;
+}
+
+- (IBAction)didChangeSegmentedControl:(id)sender {
+    [self prepareToSendData];
 }
 
 
