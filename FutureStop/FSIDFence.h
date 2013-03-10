@@ -18,6 +18,7 @@
  @param characteristicUUID A characteristic UUID for CoreBluetooth
  @param entryBlock A block to be called when a peripheral device enters the fence
  @param leavingBlock A block to be called when a peripheral device leaves the fenced area
+ @discussion Pass nil for UUIDs for a default demo mode UUID.
  */
 - (void)startScanWithFenceServiceUUID:(NSString *)serviceUUID
                    characteristicUUID:(NSString *)characteristicUUID
