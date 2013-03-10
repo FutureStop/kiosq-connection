@@ -117,7 +117,7 @@
                         <rect key="frame" x="0.0" y="64" width="768" height="960"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6V0-53-Mxn">
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6V0-53-Mxn">
                                 <constraints>
                                     <constraint firstAttribute="width" constant="432" id="WSd-k5-06O"/>
                                     <constraint firstAttribute="height" constant="194" id="nzb-dm-4PD"/>
@@ -126,16 +126,29 @@
                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="eGK-yD-nCS">
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="407" id="dzg-LI-xUy"/>
+                                    <constraint firstAttribute="height" constant="245" id="w9C-1L-cQj"/>
+                                </constraints>
+                                <connections>
+                                    <outlet property="dataSource" destination="7eE-pW-ZTc" id="Gcn-zJ-EVt"/>
+                                    <outlet property="delegate" destination="7eE-pW-ZTc" id="yA7-sr-5wo"/>
+                                </connections>
+                            </tableView>
                         </subviews>
                         <color key="backgroundColor" white="0.95456042921686746" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="6V0-53-Mxn" firstAttribute="centerX" secondItem="lin-cR-7UE" secondAttribute="centerX" type="default" id="0Ic-Wd-ieE"/>
-                            <constraint firstAttribute="bottom" secondItem="6V0-53-Mxn" secondAttribute="bottom" constant="55" id="0bo-JL-aJo"/>
+                            <constraint firstItem="6V0-53-Mxn" firstAttribute="top" secondItem="eGK-yD-nCS" secondAttribute="bottom" constant="8" symbolic="YES" type="default" id="E3e-KD-29l"/>
+                            <constraint firstItem="6V0-53-Mxn" firstAttribute="bottom" secondItem="lin-cR-7UE" secondAttribute="bottom" type="default" id="HYu-Jh-gOW"/>
+                            <constraint firstItem="eGK-yD-nCS" firstAttribute="centerX" secondItem="6V0-53-Mxn" secondAttribute="centerX" type="default" id="PDC-AR-L9F"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="ZxX-cB-0EW"/>
                     <connections>
-                        <outlet property="signalLabel" destination="6V0-53-Mxn" id="prb-LC-f1z"/>
+                        <outlet property="tableView" destination="eGK-yD-nCS" id="udG-K9-hWD"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="kpK-Ae-QYl" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -166,6 +179,7 @@
             <source key="sourceIdentifier" type="project" relativePath="./Classes/BTLECentralViewController.h"/>
             <relationships>
                 <relationship kind="outlet" name="signalLabel" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="tableView" candidateClass="UITableView"/>
             </relationships>
         </class>
         <class className="BTLEPeripheralViewController" superclassName="UIViewController">

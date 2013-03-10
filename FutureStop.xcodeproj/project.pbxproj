@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4610FA5D4AD44427B8FCF5F6 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A38BEC6B0474D809A7DC9DE /* libPods.a */; };
+		55211F5D16EC2C4200729C51 /* FSRangeFinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 55211F5C16EC2C4200729C51 /* FSRangeFinder.m */; };
 		552954DA16EBFE0C009F37BC /* BTLECentralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 552954D716EBFE0C009F37BC /* BTLECentralViewController.m */; };
 		552954DB16EBFE0C009F37BC /* BTLEPeripheralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 552954D916EBFE0C009F37BC /* BTLEPeripheralViewController.m */; };
 		552954E016EBFE3B009F37BC /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 552954DC16EBFE3B009F37BC /* MainStoryboard_iPhone.storyboard */; };
@@ -63,6 +64,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		55211F5B16EC2C4200729C51 /* FSRangeFinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FSRangeFinder.h; sourceTree = "<group>"; };
+		55211F5C16EC2C4200729C51 /* FSRangeFinder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FSRangeFinder.m; sourceTree = "<group>"; };
 		552954D616EBFE0B009F37BC /* BTLECentralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTLECentralViewController.h; sourceTree = "<group>"; };
 		552954D716EBFE0C009F37BC /* BTLECentralViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTLECentralViewController.m; sourceTree = "<group>"; };
 		552954D816EBFE0C009F37BC /* BTLEPeripheralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTLEPeripheralViewController.h; sourceTree = "<group>"; };
@@ -232,6 +235,8 @@
 				552954E316EBFE55009F37BC /* TransferService.h */,
 				552954DE16EBFE3B009F37BC /* ViewController.h */,
 				552954DF16EBFE3B009F37BC /* ViewController.m */,
+				55211F5B16EC2C4200729C51 /* FSRangeFinder.h */,
+				55211F5C16EC2C4200729C51 /* FSRangeFinder.m */,
 				552954D616EBFE0B009F37BC /* BTLECentralViewController.h */,
 				552954D716EBFE0C009F37BC /* BTLECentralViewController.m */,
 				552954D816EBFE0C009F37BC /* BTLEPeripheralViewController.h */,
@@ -416,6 +421,7 @@
 				552954DA16EBFE0C009F37BC /* BTLECentralViewController.m in Sources */,
 				552954DB16EBFE0C009F37BC /* BTLEPeripheralViewController.m in Sources */,
 				552954E216EBFE3B009F37BC /* ViewController.m in Sources */,
+				55211F5D16EC2C4200729C51 /* FSRangeFinder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

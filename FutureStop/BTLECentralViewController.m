@@ -54,14 +54,25 @@
 
 #import "TransferService.h"
 
-@interface BTLECentralViewController () <CBCentralManagerDelegate, CBPeripheralDelegate>
+
+#define CONTROL_THRESHOLD -60
+
+#define LEAVE_THRESHOLD -75
+
+@interface BTLECentralViewController () <CBCentralManagerDelegate, CBPeripheralDelegate, UITableViewDataSource, UITableViewDelegate>
 
 @property (strong, nonatomic) CBCentralManager      *centralManager;
-@property (strong, nonatomic) CBPeripheral          *discoveredPeripheral;
 @property (strong, nonatomic) NSMutableData         *data;
 
 @property (nonatomic, strong) IBOutlet UILabel      *signalLabel;
-@property (strong, nonatomic) NSArray               *rawRSSIFIFO;
+@property (strong, nonatomic) NSMutableDictionary   *rawRSSIFIFODictionary; // Dictionary of Arrays
+
+@property (nonatomic, strong) NSMutableArray        *UUIDs;
+@property (nonatomic, strong) NSMutableDictionary   *RSSIs;
+@property (nonatomic, strong) IBOutlet UITableView  *tableView;
+
+@property (nonatomic, strong) CBUUID                *controlingUUID;
+@property (nonatomic, strong) CBPeripheral          *controlingPeripheral;
 
 @end
 
@@ -84,16 +95,21 @@
     
     // And somewhere to store the incoming data
     _data = [[NSMutableData alloc] init];
+    
+    [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"Cell"];
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    
+    self.UUIDs = [NSMutableArray array];
+    self.RSSIs = [NSMutableDictionary dictionary];
+    self.rawRSSIFIFODictionary = [NSMutableDictionary dictionary];
 }
-
-
-
 
 - (void)viewWillDisappear:(BOOL)animated
 {
     // Don't keep it going while we're not showing.
     [self.centralManager stopScan];
-    NSLog(@"Scanning stopped");
+    //NSLog(@"Scanning stopped");
     
     [super viewWillDisappear:animated];
 }
@@ -133,7 +149,7 @@
     
     [self.centralManager retrieveConnectedPeripherals];
     
-    NSLog(@"Scanning started");
+    //NSLog(@"Scanning started");
 }
 
 
@@ -143,7 +159,13 @@
 }
 
 - (void)centralManager:(CBCentralManager *)central didRetrieveConnectedPeripherals:(NSArray *)peripherals {
-    NSLog(@"%@", peripherals);
+    [self.UUIDs removeAllObjects];
+    
+    for (CBPeripheral *peripheral in peripherals) {
+        [self.UUIDs addObject:[CBUUID UUIDWithCFUUID:peripheral.UUID]];
+    }
+    
+    [self.tableView reloadData];
 }
 
 
@@ -156,54 +178,78 @@
     [self.centralManager retrieveConnectedPeripherals];
     
     const NSInteger kFIFOLength = 20;
+    
+    NSString *peripheralAddress = [NSString stringWithFormat:@"%p", peripheral];
+    
+    NSMutableArray *rawRSSIFIFO = [self.rawRSSIFIFODictionary objectForKey:peripheralAddress];
+    
+    if (rawRSSIFIFO == nil)
+        rawRSSIFIFO = [NSMutableArray array];
 
     NSMutableArray *newRSSIFIFO = [NSMutableArray arrayWithObject:RSSI];
-    [newRSSIFIFO addObjectsFromArray:self.rawRSSIFIFO];
+    [newRSSIFIFO addObjectsFromArray:rawRSSIFIFO];
     if (newRSSIFIFO.count > kFIFOLength)
         [newRSSIFIFO removeLastObject];
     
-    self.rawRSSIFIFO = newRSSIFIFO;
+    rawRSSIFIFO = newRSSIFIFO;
     NSInteger totalRSSI = 0;
-    for (NSNumber *rssi in self.rawRSSIFIFO) {
+    for (NSNumber *rssi in rawRSSIFIFO) {
         totalRSSI += rssi.integerValue;
     }
     
     NSInteger averageRSSI = 0;
-    if (self.rawRSSIFIFO.count > 1)
-        averageRSSI = self.rawRSSIFIFO.count;
+    if (rawRSSIFIFO.count > 1)
+        averageRSSI = roundf(totalRSSI / (int)[rawRSSIFIFO count]);
+    
+    [self.rawRSSIFIFODictionary setObject:rawRSSIFIFO forKey:peripheralAddress];
 
+    CBUUID *UUID = nil;
+    
+    if (peripheral.UUID) {
+        UUID = [CBUUID UUIDWithCFUUID:peripheral.UUID];
+        
+        [self.RSSIs setObject:@(averageRSSI) forKey:UUID];
+    }
     
     self.signalLabel.text = [NSString stringWithFormat:@"%0d", averageRSSI];
 
     // Reject any where the value is above reasonable range
-    if (RSSI.integerValue > -15) {
+    if (averageRSSI > -15) {
         return;
     }
         
     // Reject if the signal strength is too low to be close enough (Close is around -22dB)
-    if (RSSI.integerValue < -35) {
-        //return;
+    if (averageRSSI > CONTROL_THRESHOLD && self.controlingPeripheral == nil) {
+        NSLog(@"%@ Controlling Screen", peripheral);
+        self.controlingPeripheral = peripheral;
+        
+        // Save a local copy of the peripheral, so CoreBluetooth doesn't get rid of it
+        self.controlingPeripheral = peripheral;
+        self.controlingPeripheral.delegate = self;
+        
+        // And connect
+        //NSLog(@"Connecting to peripheral %@", peripheral);
+        [self.centralManager connectPeripheral:peripheral options:nil];
     }
     
-    if (RSSI.integerValue < -70) {
-        if (self.discoveredPeripheral == peripheral) {
-            //[self.centralManager cancelPeripheralConnection:peripheral];
-        }
-    } else {
-        NSLog(@"Discovered %@ at %@", peripheral.name, RSSI);
-        
-        // Ok, it's in range - have we already seen it?
-        if (self.discoveredPeripheral != peripheral) {
-            
-            // Save a local copy of the peripheral, so CoreBluetooth doesn't get rid of it
-            self.discoveredPeripheral = peripheral;
-            self.discoveredPeripheral.delegate = self;
-            
-            // And connect
-            NSLog(@"Connecting to peripheral %@", peripheral);
-            [self.centralManager connectPeripheral:peripheral options:nil];
+    if (self.controlingPeripheral == peripheral && UUID) {
+        self.controlingUUID = UUID;
+    }
+    
+    if (averageRSSI < LEAVE_THRESHOLD) {
+        if (self.controlingPeripheral == peripheral) {
+            NSLog(@"%@ Leaving Screen", peripheral);
+            [self releaseControl];
+            [self.centralManager cancelPeripheralConnection:peripheral];
+
         }
     }
+}
+
+- (void)releaseControl {
+    self.controlingPeripheral = nil;
+    self.controlingUUID = nil;
+    self.view.backgroundColor = [UIColor whiteColor];
 }
 
 
@@ -211,7 +257,7 @@
  */
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
-    NSLog(@"Failed to connect to %@. (%@)", peripheral, [error localizedDescription]);
+    //NSLog(@"Failed to connect to %@. (%@)", peripheral, [error localizedDescription]);
     //[self cleanup];
 }
 
@@ -222,11 +268,11 @@
  */
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral
 {
-    NSLog(@"Peripheral Connected");
+    //NSLog(@"Peripheral Connected");
     
     // Stop scanning
     //[self.centralManager stopScan];
-    NSLog(@"Scanning stopped");
+    //NSLog(@"Scanning stopped");
     
     // Clear the data that we may already have
     [self.data setLength:0];
@@ -244,8 +290,7 @@
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error
 {
     if (error) {
-        NSLog(@"Error discovering services: %@", [error localizedDescription]);
-        [self cleanup];
+        //NSLog(@"Error discovering services: %@", [error localizedDescription]);
         return;
     }
     
@@ -265,7 +310,7 @@
 {
     // Deal with errors (if any)
     if (error) {
-        NSLog(@"Error discovering characteristics: %@", [error localizedDescription]);
+        //NSLog(@"Error discovering characteristics: %@", [error localizedDescription]);
        // [self cleanup];
         return;
     }
@@ -293,7 +338,7 @@
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
 {
     if (error) {
-        NSLog(@"Error discovering characteristics: %@", [error localizedDescription]);
+        //NSLog(@"Error discovering characteristics: %@", [error localizedDescription]);
         return;
     }
     
@@ -342,7 +387,7 @@
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error
 {
     if (error) {
-        NSLog(@"Error changing notification state: %@", error.localizedDescription);
+        //NSLog(@"Error changing notification state: %@", error.localizedDescription);
     }
     
     // Exit if it's not the transfer characteristic
@@ -352,13 +397,13 @@
     
     // Notification has started
     if (characteristic.isNotifying) {
-        NSLog(@"Notification began on %@", characteristic);
+       // NSLog(@"Notification began on %@", characteristic);
     }
     
     // Notification has stopped
     else {
         // so disconnect from the peripheral
-        NSLog(@"Notification stopped on %@.  Disconnecting", characteristic);
+        //NSLog(@"Notification stopped on %@.  Disconnecting", characteristic);
         //[self.centralManager cancelPeripheralConnection:peripheral];
     }
 }
@@ -368,46 +413,42 @@
  */
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error
 {
-    NSLog(@"Peripheral Disconnected");
-    self.discoveredPeripheral = nil;
-    
     // We're disconnected, so start scanning again
+    [self releaseControl];
     [self scan];
 }
 
+#pragma mark - UITableView
 
-/** Call this when things either go wrong, or you're done with the connection.
- *  This cancels any subscriptions if there are any, or straight disconnects if not.
- *  (didUpdateNotificationStateForCharacteristic will cancel the connection if a subscription is involved)
- */
-- (void)cleanup
-{
-    // Don't do anything if we're not connected
-    if (!self.discoveredPeripheral.isConnected) {
-        return;
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return [self.UUIDs count];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
+    
+    CBUUID *UUID = [self.UUIDs objectAtIndex:indexPath.row];
+    id RSSI = [self.RSSIs objectForKey:UUID];
+    
+    if (RSSI == nil)
+        RSSI = @"N/A";
+    
+    if ([UUID isEqual: self.controlingUUID]) {
+        cell.textLabel.textColor = [UIColor redColor];
+    } else {
+        cell.textLabel.textColor = [UIColor blackColor];
     }
     
-    // See if we are subscribed to a characteristic on the peripheral
-    if (self.discoveredPeripheral.services != nil) {
-        for (CBService *service in self.discoveredPeripheral.services) {
-            if (service.characteristics != nil) {
-                for (CBCharacteristic *characteristic in service.characteristics) {
-                    if ([characteristic.UUID isEqual:[CBUUID UUIDWithString:TRANSFER_CHARACTERISTIC_UUID]]) {
-                        if (characteristic.isNotifying) {
-                            // It is notifying, so unsubscribe
-                            [self.discoveredPeripheral setNotifyValue:NO forCharacteristic:characteristic];
-                            
-                            // And we're done.
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    NSString *text = [NSString stringWithFormat:@"%@ : %@", RSSI, [UUID description]];
+                      
+    cell.textLabel.text = text;
+
     
-    // If we've got this far, we're connected, but we're not subscribed, so we just disconnect
-    [self.centralManager cancelPeripheralConnection:self.discoveredPeripheral];
+    return cell;
 }
 
 
