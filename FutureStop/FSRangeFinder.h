@@ -16,7 +16,7 @@
 
 @property (nonatomic, weak) id<FSRangeFinderDelegate> delegate;
 
-- (void)receivedSignalStrengthRSSI:(NSString *)RSSI forPeripheral:(CBPeripheral *)peripheral;
+- (void)receivedSignalStrengthRSSI:(NSNumber *)RSSI forPeripheral:(CBPeripheral *)peripheral;
 
 @end
 

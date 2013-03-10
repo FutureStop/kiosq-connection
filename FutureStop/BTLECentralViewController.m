@@ -53,26 +53,22 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 
 #import "TransferService.h"
+#import "FSRangeFinder.h"
 
-
-#define CONTROL_THRESHOLD -60
-
-#define LEAVE_THRESHOLD -75
-
-@interface BTLECentralViewController () <CBCentralManagerDelegate, CBPeripheralDelegate, UITableViewDataSource, UITableViewDelegate>
+@interface BTLECentralViewController () <CBCentralManagerDelegate, CBPeripheralDelegate, UITableViewDataSource, UITableViewDelegate, FSRangeFinderDelegate>
 
 @property (strong, nonatomic) CBCentralManager      *centralManager;
 @property (strong, nonatomic) NSMutableData         *data;
 
 @property (nonatomic, strong) IBOutlet UILabel      *signalLabel;
-@property (strong, nonatomic) NSMutableDictionary   *rawRSSIFIFODictionary; // Dictionary of Arrays
 
-@property (nonatomic, strong) NSMutableArray        *UUIDs;
-@property (nonatomic, strong) NSMutableDictionary   *RSSIs;
 @property (nonatomic, strong) IBOutlet UITableView  *tableView;
 
 @property (nonatomic, strong) CBUUID                *controlingUUID;
 @property (nonatomic, strong) CBPeripheral          *controlingPeripheral;
+
+@property (nonatomic, strong) FSRangeFinder         *rangeFinder;
+@property (nonatomic, strong) NSMutableArray        *UUIDs;
 
 @end
 
@@ -80,11 +76,7 @@
 
 @implementation BTLECentralViewController
 
-
-
 #pragma mark - View Lifecycle
-
-
 
 - (void)viewDidLoad
 {
@@ -101,8 +93,8 @@
     self.tableView.dataSource = self;
     
     self.UUIDs = [NSMutableArray array];
-    self.RSSIs = [NSMutableDictionary dictionary];
-    self.rawRSSIFIFODictionary = [NSMutableDictionary dictionary];
+    self.rangeFinder = [[FSRangeFinder alloc] init];
+    self.rangeFinder.delegate = self;
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -173,77 +165,10 @@
  *  We check the RSSI, to make sure it's close enough that we're interested in it, and if it is, 
  *  we start the connection process
  */
-- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI
-{
+- (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary *)advertisementData RSSI:(NSNumber *)RSSI {
     [self.centralManager retrieveConnectedPeripherals];
-    
-    const NSInteger kFIFOLength = 20;
-    
-    NSString *peripheralAddress = [NSString stringWithFormat:@"%p", peripheral];
-    
-    NSMutableArray *rawRSSIFIFO = [self.rawRSSIFIFODictionary objectForKey:peripheralAddress];
-    
-    if (rawRSSIFIFO == nil)
-        rawRSSIFIFO = [NSMutableArray array];
 
-    NSMutableArray *newRSSIFIFO = [NSMutableArray arrayWithObject:RSSI];
-    [newRSSIFIFO addObjectsFromArray:rawRSSIFIFO];
-    if (newRSSIFIFO.count > kFIFOLength)
-        [newRSSIFIFO removeLastObject];
-    
-    rawRSSIFIFO = newRSSIFIFO;
-    NSInteger totalRSSI = 0;
-    for (NSNumber *rssi in rawRSSIFIFO) {
-        totalRSSI += rssi.integerValue;
-    }
-    
-    NSInteger averageRSSI = 0;
-    if (rawRSSIFIFO.count > 1)
-        averageRSSI = roundf(totalRSSI / (int)[rawRSSIFIFO count]);
-    
-    [self.rawRSSIFIFODictionary setObject:rawRSSIFIFO forKey:peripheralAddress];
-
-    CBUUID *UUID = nil;
-    
-    if (peripheral.UUID) {
-        UUID = [CBUUID UUIDWithCFUUID:peripheral.UUID];
-        
-        [self.RSSIs setObject:@(averageRSSI) forKey:UUID];
-    }
-    
-    self.signalLabel.text = [NSString stringWithFormat:@"%0d", averageRSSI];
-
-    // Reject any where the value is above reasonable range
-    if (averageRSSI > -15) {
-        return;
-    }
-        
-    // Reject if the signal strength is too low to be close enough (Close is around -22dB)
-    if (averageRSSI > CONTROL_THRESHOLD && self.controlingPeripheral == nil) {
-        NSLog(@"%@ Controlling Screen", peripheral);
-        self.controlingPeripheral = peripheral;
-        
-        // Save a local copy of the peripheral, so CoreBluetooth doesn't get rid of it
-        self.controlingPeripheral = peripheral;
-        self.controlingPeripheral.delegate = self;
-        
-        // And connect
-        //NSLog(@"Connecting to peripheral %@", peripheral);
-        [self.centralManager connectPeripheral:peripheral options:nil];
-    }
-    
-    if (self.controlingPeripheral == peripheral && UUID) {
-        self.controlingUUID = UUID;
-    }
-    
-    if (averageRSSI < LEAVE_THRESHOLD) {
-        if (self.controlingPeripheral == peripheral) {
-            NSLog(@"%@ Leaving Screen", peripheral);
-            [self releaseControl];
-            [self.centralManager cancelPeripheralConnection:peripheral];
-
-        }
-    }
+    [self.rangeFinder receivedSignalStrengthRSSI:RSSI forPeripheral:peripheral];
 }
 
 - (void)releaseControl {
@@ -252,6 +177,26 @@
     self.view.backgroundColor = [UIColor whiteColor];
 }
 
+#pragma mark Range
+
+- (void)rangeFinder:(FSRangeFinder *)rangeFinder didUpdateToClosestPeripheral:(CBPeripheral *)peripheral {
+    NSLog(@"%@ Controlling Screen", peripheral);
+    self.controlingPeripheral = peripheral;
+    
+    // Save a local copy of the peripheral, so CoreBluetooth doesn't get rid of it
+    self.controlingPeripheral = peripheral;
+    self.controlingPeripheral.delegate = self;
+    
+    // And connect
+    //NSLog(@"Connecting to peripheral %@", peripheral);
+    [self.centralManager connectPeripheral:peripheral options:nil];
+}
+
+- (void)rangeFinder:(FSRangeFinder *)rangeFinder didReleaseControlFromPeripheral:(CBPeripheral *)peripheral {
+    NSLog(@"%@ Leaving Screen", peripheral);
+    [self releaseControl];
+    [self.centralManager cancelPeripheralConnection:peripheral];
+}
 
 /** If the connection fails for whatever reason, we need to deal with it.
  */
@@ -432,18 +377,8 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
     
     CBUUID *UUID = [self.UUIDs objectAtIndex:indexPath.row];
-    id RSSI = [self.RSSIs objectForKey:UUID];
-    
-    if (RSSI == nil)
-        RSSI = @"N/A";
-    
-    if ([UUID isEqual: self.controlingUUID]) {
-        cell.textLabel.textColor = [UIColor redColor];
-    } else {
-        cell.textLabel.textColor = [UIColor blackColor];
-    }
-    
-    NSString *text = [NSString stringWithFormat:@"%@ : %@", RSSI, [UUID description]];
+
+    NSString *text = [NSString stringWithFormat:@"%@ : %@", @"", [UUID description]];
                       
     cell.textLabel.text = text;
 
